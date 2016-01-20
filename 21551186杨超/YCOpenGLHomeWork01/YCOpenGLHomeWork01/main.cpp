@@ -7,247 +7,162 @@
 //
 
 #include <iostream>
-#include <math.h>
 #include <unistd.h>
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
 #include <GLUT/GLUT.h>
 using namespace std;
 
-GLfloat spin = 0;
-const GLfloat lightPosition[] = {10.0,10.0,10.0,0.0};
-const GLfloat whiteLight[] = {0.8,0.8,0.8,1.0};
-GLfloat matSpecular [] = {0.3,0.3,0.3,1.0};
-GLfloat matShininess [] = {20.0};
-GLfloat matEmission [] = {0.3,0.3,0.3,1.0};
-
-void display()
+void myAxis()
 {
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();;
-    glOrtho(-10.0,10.0,-10.0,10.0,-10.0,10.0);
-    
-    gluLookAt(1.0,1.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0);//设置观察角度
-    //绘制坐标系
+    //绘制X轴
+    glColor3f(1.0f, 0.0f, 0.0f);
     glBegin(GL_LINES);
-    glVertex3f(0.0,0.0,0.0);
-    glVertex3f(10.0,0.0,0.0);//X轴
-    glVertex3f(0.0,0.0,0.0);
-    glVertex3f(0.0,10.0,0.0);//Y轴
-    glVertex3f(0.0,0.0,0.0);
-    glVertex3f(0.0,0.0,10.0);//Z轴
+    {
+        glVertex3f( 0.0f, 0.0f, 0.0f);
+        glVertex3f( 50.0f, 0.0f, 0.0f);
+        //绘制坐标轴的箭头
+        glVertex3f( 50.0f, 0.0f, 0.0f);
+        glVertex3f( 49.0f, 1.0f, 0.0f);
+        glVertex3f( 50.0f, 0.0f, 0.0f);
+        glVertex3f( 49.0f,-1.0f, 0.0f);
+    }
     glEnd();
-    glFlush();
+    
+    //绘制Y轴
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glBegin(GL_LINES);
+    {
+        glVertex3f( 0.0f, 0.0f, 0.0f);
+        glVertex3f( 0.0f, 50.0f, 0.0f);
+        glVertex3f( 0.0f, 50.0f, 0.0f);
+        glVertex3f( 1.0f, 49.0f, 0.0f);
+        glVertex3f( 0.0f, 50.0f, 0.0f);
+        glVertex3f( -1.0f, 49.0f, 0.0f);
+    }
+    glEnd();
+    
+    //绘制Z轴
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glBegin( GL_LINES );
+    {
+        glVertex3f( 0.0f, 0.0f, 0.0f );
+        glVertex3f( 0.0f, 0.0f, 50.0f );
+        glVertex3f( 0.0f, 0.0f, 50.0f );
+        glVertex3f( 0.0f, 1.0f, 49.0f );
+        glVertex3f( 0.0f, 0.0f, 50.0f );
+        glVertex3f( 0.0f, -1.0f, 49.0f);
+    }
+    glEnd();
+}
+
+//x轴和y轴位置
+static GLfloat X_Axis = 0.0f;
+static GLfloat Y_Axis = 0.0f;
+
+//绘制太阳地球月亮的函数
+void myDisplay()
+{
+    //清除缓冲区（颜色缓冲区、深度缓冲区、模板缓冲区），填充的颜色由glClearColor()指定
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    
+    //开始渲染
+    glPushMatrix();
+    
+    //使用键盘控制X轴、Y轴旋转
+    glRotatef(X_Axis, 1.0f, 0.0f, 0.0f);
+    glRotatef(Y_Axis, 0.0f, 1.0f, 0.0f);
+    //绘制坐标系
+    myAxis();
+    
+    glDisable(GL_LIGHTING);
     
     //绘制太阳
-    glMatrixMode(GL_MODELVIEW);
-    glColor3f(0.0f, 1.0f, 0.0f);
-    glPushMatrix();
-    glRotatef(spin,0.0,1.0,0.0);
-    glMaterialfv(GL_FRONT,GL_SPECULAR,matSpecular);
-    glMaterialfv(GL_FRONT,GL_SHININESS,matShininess);
-    glMaterialfv(GL_FRONT,GL_EMISSION,matEmission);
-    glutSolidSphere(2.5,160,16);
-    
-    glPopMatrix();
-    glFlush();
-    
+    glColor3f(0.9f, 0.1f, 0.1f);//设置太阳颜色
+    glutSolidSphere(10.0f, 30, 30);//后面两个参数越大，绘制的球体越“圆”
     
     //绘制地球
-    GLfloat RADIUS = 6.0f;
-    glMatrixMode(GL_MODELVIEW);
-    glColor3f(0.0f, 0.0f, 1.0f);
-    glPushMatrix();
-    glRotatef(spin, 0.0, 1.0,0.0);
-    glTranslatef(RADIUS, 0, 0);
-    glMaterialfv(GL_FRONT,GL_SPECULAR,matSpecular);
-    glMaterialfv(GL_FRONT,GL_SHININESS,matShininess);
-    glMaterialfv(GL_FRONT,GL_EMISSION,matEmission);
-    glutSolidSphere(1.2,160,16);
+    static GLfloat alpha = 0.0f;
+    const GLfloat radius = 20.f;
+    glRotatef(alpha, 0, 0, 1);
+    glTranslatef(radius, radius, 0);
+    glColor3f(0.2f, 0.2f, 0.9f);
+    glutSolidSphere(4.0f, 30, 30);
     
-    glPopMatrix();
-    
-    
-    //绘制月亮
-    glMatrixMode(GL_MODELVIEW);
+    //绘制“月亮”
     glColor3f(1.0f, 1.0f, 0.0f);
-    glPushMatrix();
-    glRotatef(spin, 0.0, 1.0, 0.0);
-    GLfloat alpha = spin;
-    if (spin > 180)
-        alpha = 360 - spin;
-    GLfloat t = sqrt(RADIUS*RADIUS + RADIUS*RADIUS*0.25 - RADIUS*RADIUS*cos(alpha));
-    glTranslatef(t, 0, 0);
-    glMaterialfv(GL_FRONT,GL_SPECULAR,matSpecular);
-    glMaterialfv(GL_FRONT,GL_SHININESS,matShininess);
-    glMaterialfv(GL_FRONT,GL_EMISSION,matEmission);
-    glutSolidSphere(1.0,160,16);
+    glRotatef(alpha/30.0*360.0 - alpha/360.0*360.0, 0.0f, 0.0f, -1.0f);
+    glTranslatef(radius/2, 0.0f, 0.0f);
+    glutSolidSphere(1.5f, 40, 40);
     
+    //开始旋转
+    alpha += 0.3f;
+    if (alpha >= 360)
+    {
+        alpha -= 360;
+    }
+    //显示所绘制图像
     glPopMatrix();
     
-    spin = spin + 1;
-    if (spin>=360)
-    {
-        spin = 0;
-    }
-    //sleep(500);
-    glFlush();
+    //使用双缓存，避免刷新时闪烁
+    glutSwapBuffers();
 }
 
-void MyKeyboard(unsigned char key,int x,int y)//键盘事件
+void myReshape(GLsizei w, GLsizei h)
 {
-    switch(key)
+    //如果h为0的情况，w为0的情况呢
+    if(!h)
     {
-        case 'a':
-        {
-            while (true)
-            {
-                spin = spin + 10;
-                display();
-                //Sleep(500);
-            }
-            break;
-        }
+        h = 1;
     }
-}
-
-void myReshape(int w, int h)//针对窗体大小改变而写的函数
-{
-    if (!h)
-        return;
+    //视口映射 把绘图坐标映射到窗口坐标、从逻辑笛卡尔坐标映射到物理屏幕像素坐标
+    //视口就是窗口内部用于绘制裁剪区域的客户区域
+    //从左下角开始，如果刚好和main函数中WindowSize相同大小，则显示图像刚好，否则有裁剪或者包裹
     glViewport(0, 0, w, h);
+    
+    //重置投影矩阵
     glMatrixMode(GL_PROJECTION);
+    //将之前矩阵变换导致变化过的栈顶矩阵重新归位，置为单位矩阵！等于是之前的矩阵变换带来的影响到此为止了!
     glLoadIdentity();
-    gluPerspective(60.0, 1.0*(GLfloat)w/(GLfloat)h,1.0, 30.0);//视角
+    
+    //正投影（也叫平行投影）设置
+    GLfloat Ortho_Parm = 40.0f;//这个参数与绘制的球的半径有关，一般比半径大一些，把球体包裹在里面
+    if (w <= h)
+    {
+        glOrtho(-Ortho_Parm, Ortho_Parm, -Ortho_Parm*h/w, Ortho_Parm*h/w, -Ortho_Parm, Ortho_Parm);
+    }
+    else
+    {
+        glOrtho(-Ortho_Parm*w/h, Ortho_Parm*w/h, -Ortho_Parm, Ortho_Parm, -Ortho_Parm, Ortho_Parm);
+    }
+    //重置模型视图矩阵
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glTranslatef(0.0, 0.0, -3.0);//平移
+    //设置外部观察角度
+    gluLookAt(1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 }
 
-void SetMatrial()//设置光源和材质，以材质为主
-{
-    /*设置合适的光源和材质，设置材质的各种光的颜色成分反射比率*/
-    GLfloat mat_ambient[]={0.8,0.8,0.8,1.0};
-    GLfloat mat_diffuse[]={0.8,0.0,0.8,1.0};/* 紫色 */
-    GLfloat mat_specular[] = { 1.0, 0.0, 1.0, 1.0 };/* 亮紫色 */
-    GLfloat mat_shininess[] = { 50.0 };
-    GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };//材质光源位置
-    
-    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-    
-    glLightfv(GL_LIGHT0, GL_POSITION,light_position);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-}
-
-void SetLightSource()//设置光源和材质，以光源为主
-{
-    //设置合适的光源和材质
-    GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };//设置材质光
-    GLfloat mat_shininess[] = { 50.0 };
-    GLfloat light_ambient[] = { 1.0, 0.0, 1.0, 1.0 };//设置环境光，这三种光的颜色要是一样的，现在是紫色
-    GLfloat light_diffuse[] = { 1.0, 0.0, 1.0, 1.0 };
-    GLfloat light_specular[] = { 1.0, 0.0, 1.0, 1.0 };
-    GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 }; //最后一个参数为0表示该光源是directional的
-    //GLfloat light_position[] = { 1.0, 1.0, 1.0, 1.0 }; //最后一个参数非0表示该光源是positional的
-    //GLfloat Light_Model_Ambient[] = { 0.0 , 0.0 , 0.0 , 1.0 }; //全局环境光设为黑色
-    GLfloat Light_Model_Ambient[] = { 0.2 , 0.2 , 0.2 , 1.0 }; //默认的全局环境光
-    glLightModelfv( GL_LIGHT_MODEL_AMBIENT , Light_Model_Ambient ); //设置全局环境光的方法
-    
-    glClearColor (0.0, 0.0, 0.0, 0.0);//清除颜色
-    glShadeModel (GL_SMOOTH);
-    
-    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-    
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0); //把全局环境光设置为黑色,然后注释掉本句可以发现"黑屏"
-}
-
+//初始化界面
 void myInit(void)
 {
-    glClearColor(1.0,1.0,1.0,0.0);
-    glEnable(GL_DEPTH_TEST);//打开深度测试
+    //RGB颜色空间
+    glClearColor(1.0, 1.0, 1.0, 0.0);
     glShadeModel(GL_SMOOTH);
-    glDepthFunc(GL_LESS);
-    //SetLightSource();
-    SetMatrial();
-    glShadeModel (GL_FLAT);
+    glEnable(GL_DEPTH_TEST);//打开深度测试
 }
 
-void draw() {
-    
-    //设置清屏色
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    //设置颜色，红色
-    glColor3f(1.0f, 0.0f, 0.0f);
-    //设置绘图时的坐标系统
-    glOrtho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
-    //开始渲染
-    glBegin(GL_POLYGON);
-    //设置多边形的4个顶点
-    glVertex3f(0.25f, 0.25f, 0.0f);
-    glVertex3f(0.75f, 0.25f, 0.0f);
-    glVertex3f(0.75f, 0.75f, 0.0f);
-    glVertex3f(0.25f, 0.75f, 0.0f);
-    //结束渲染
-    glEnd();
-    
-    
-//    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-//    glMatrixMode(GL_PROJECTION);
-//    glLoadIdentity();;
-//    glOrtho(-10.0,10.0,-10.0,10.0,-10.0,10.0);
-//    
-//    gluLookAt(1.0,1.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0);//设置观察角度
-//    //绘制坐标系
-//    glBegin(GL_LINES);
-//    glVertex3f(0.0,0.0,0.0);
-//    glVertex3f(10.0,0.0,0.0);//X轴
-//    glVertex3f(0.0,0.0,0.0);
-//    glVertex3f(0.0,10.0,0.0);//Y轴
-//    glVertex3f(0.0,0.0,0.0);
-//    glVertex3f(0.0,0.0,10.0);//Z轴
-//    glEnd();
-//    glFlush();
-//    //绘制太阳
-//    glMatrixMode(GL_MODELVIEW);
-//    glColor3f(0.0f, 1.0f, 0.0f);
-//    glPushMatrix();
-//    glRotatef(spin,0.0,1.0,0.0);
-//    glMaterialfv(GL_FRONT,GL_SPECULAR,matSpecular);
-//    glMaterialfv(GL_FRONT,GL_SHININESS,matShininess);
-//    glMaterialfv(GL_FRONT,GL_EMISSION,matEmission);
-//    glutSolidSphere(2.5,160,16);
-//    glPopMatrix();
-    
-    //强制刷新缓冲区，保证绘制命令被执行
-    glFlush();
-    
-}
-
-int main(int argc, const char * argv[]) {
-    glutInit(&argc, (char**)argv);
-    glutInitDisplayMode (GLUT_SINGLE | GLUT_RGB);
-    glutInitWindowSize(1000,1000);
-    glutInitWindowPosition (300,300);
+int main(int argc, char * argv[]) {
+    glutInit(&argc, argv);
+    glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(800,600);
+    glutInitWindowPosition (400,200);
     glutCreateWindow("绘制太阳系");
     
-    myInit();
-//    glutDisplayFunc(draw);
-    glutDisplayFunc(display);
-    glutIdleFunc (display);
+    glutDisplayFunc(myDisplay);
+    glutIdleFunc (myDisplay);
+    
     glutReshapeFunc(myReshape);
-//    glutKeyboardFunc(MyKeyboard);
+    myInit();
     glutMainLoop();
     
     return 0;
